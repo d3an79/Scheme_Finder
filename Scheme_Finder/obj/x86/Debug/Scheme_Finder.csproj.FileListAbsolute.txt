@@ -1,0 +1,14 @@
+C:\Users\Dean\AppData\Local\Temporary Projects\Scheme_Finder\bin\Debug\Scheme_Finder.exe
+C:\Users\Dean\AppData\Local\Temporary Projects\Scheme_Finder\bin\Debug\Scheme_Finder.pdb
+C:\Users\Dean\AppData\Local\Temporary Projects\Scheme_Finder\obj\x86\Debug\Scheme_Finder.Form1.resources
+C:\Users\Dean\AppData\Local\Temporary Projects\Scheme_Finder\obj\x86\Debug\Scheme_Finder.Properties.Resources.resources
+C:\Users\Dean\AppData\Local\Temporary Projects\Scheme_Finder\obj\x86\Debug\Scheme_Finder.csproj.GenerateResource.Cache
+C:\Users\Dean\AppData\Local\Temporary Projects\Scheme_Finder\obj\x86\Debug\Scheme_Finder.exe
+C:\Users\Dean\AppData\Local\Temporary Projects\Scheme_Finder\obj\x86\Debug\Scheme_Finder.pdb
+C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Debug\Scheme_Finder.exe
+C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Debug\Scheme_Finder.pdb
+C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\bin\Debug\Scheme_Finder.exe
+C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\bin\Debug\Scheme_Finder.pdb
+C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Debug\Scheme_Finder.Properties.Resources.resources
+C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Debug\Scheme_Finder.csproj.GenerateResource.Cache
+C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Debug\Scheme_Finder.MainForm.resources
