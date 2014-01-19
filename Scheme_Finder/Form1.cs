@@ -1,4 +1,14 @@
-﻿using System;
+﻿/********************************************************************************************************
+ * 
+ * Scheme_finder V1 written by Dean Findlay 19/01/14
+ * 
+ * v1 basic functionality - fixed scheme length drift
+ * 
+ * 
+ * 
+ * 
+ * ****************************************************************************************************/
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -21,17 +31,21 @@ namespace Scheme_Finder
         private string  sourceFilePath, destinationFilePath;
         private float targetLength, targetScore, targetTolerance;
 
+        // initialise list of sections
+        List<Section> ListSections = new List<Section>();
+
+        // initialise list of list of sections
+        List<List<Section>> ListofListSections = new List<List<Section>>();
+
         private void Form1_Load(object sender, EventArgs e)
         {
-            // !!! initialise list of sections
 
-            // !!! initialise list of list of sections
         }
 
         // Display 'About' information
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Scheme Finder V1.1\nWritten by Dean Findlay\nDean.Findlay@Derbyshire.Gov.UK");
+            MessageBox.Show("Scheme Finder V1\nWritten by Dean Findlay\nDean.Findlay@Derbyshire.Gov.UK");
         }
 
         // Set source file path
@@ -93,9 +107,11 @@ namespace Scheme_Finder
                 // Initate instance of FinndSchemes and start program
                 FindSchemes run = new FindSchemes();
                 run.StartFinder(sourceFilePath, destinationFilePath
-                    , targetLength, targetScore, targetTolerance);
+                    , targetLength, targetScore, targetTolerance
+                    , ListofListSections );
 
                 this.Text = "Scheme Finder";
+                MessageBox.Show(ListofListSections.Count.ToString());
             }
         }
 
@@ -152,7 +168,8 @@ namespace Scheme_Finder
 
         // !!! Starting point for program
         public void StartFinder(string formSource, string formDestination
-            , float formLength, float formScore, float formTol)
+            , float formLength, float formScore, float formTol
+            , List<List<Section>> listOfListSections)
         {
             // Assign variables passed from form
             this.sourcePath = formSource;
@@ -280,6 +297,9 @@ namespace Scheme_Finder
                             Both_SidesWriter.WriteLine("Opposite side scheme with score of " + oppScoreSum);
                             QueueSection.PrintQueue(OppositeSideScheme, Both_SidesWriter);
                             Both_SidesWriter.WriteLine();
+
+                            // create list of sections from both lanes and add to list of list sections
+                            listOfListSections.Add(makeList(queueSection, OppositeSideScheme));
                         }
                     }
 
@@ -507,6 +527,24 @@ namespace Scheme_Finder
                 // Read in next line of text
                 laneText = laneReader.ReadLine();
             } 
+        }
+
+        // returns a list made from 2 queues of sections
+        private List<Section> makeList(Queue<Section> laneA, Queue<Section> laneB)
+        {
+            List<Section> tempList = new List<Section>();
+
+            foreach (Section secta in laneA)
+            {
+                tempList.Add(secta);
+            }
+
+            foreach (Section sectb in laneB)
+            {
+                tempList.Add(sectb);
+            }
+
+            return tempList;
         }
     }
 
