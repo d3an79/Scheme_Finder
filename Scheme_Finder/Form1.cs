@@ -4,8 +4,31 @@
  * 
  * v1 basic functionality - fixed scheme length drift
  * 
+ * 19/01/14 v1.1 - added list functionality, need to add to listviews on form
+ * 
+ * 11/02/14 v1.2 - listviews working 
  * 
  * 
+ * TODO
+ * 
+ * Colour scores in scheme view according to UKPMS value ranges
+ * 
+ * Create a continuous scheme workflow where if a scheme continues to be viable the extents are
+ *    extended to accomodate
+ *    
+ * Functionality to choose wich outputs are included
+ * 
+ * Ability to load in pre-analysed schemes
+ * 
+ * Scheme efficiency tools - STDEV...
+ * 
+ * Sort scheme summary on score, Road_NO/Section_No, STDEV
+ * 
+ * Choose Min/Max score range to highlight different typres of conditions
+ * 
+ * Ability to read in Un-processed SCANNER data and apply different weightings
+ * 
+ * Add mapping portal using MapWinGIS
  * 
  * ****************************************************************************************************/
 using System;
@@ -25,6 +48,10 @@ namespace Scheme_Finder
         public MainForm()
         {
             InitializeComponent();
+
+            // add columns to listviews
+            initialiseListView(lvw_SchemeSummary, summaryHeaders);
+            initialiseListView(lvw_Scheme, SchemeHeaders);            
         }
 
         // Internal variables
@@ -37,6 +64,17 @@ namespace Scheme_Finder
         // initialise list of list of sections
         List<List<Section>> ListofListSections = new List<List<Section>>();
 
+        // Initialise list of listviewitems to hold the scheme data
+        List<ListViewItem> schemeSectionListView = new List<ListViewItem>();
+
+        // columns to be added to the listviews
+        string[] summaryHeaders = new string[] {"Scheme No", "Road No", "Start Section", "Start Chain"
+                , "End Section", "End Chain", "Score"};
+
+        string[] SchemeHeaders = new string[] {"ID", "Road No", "Section", "Lane"
+                , "Start Chain", "End Chain", "Score"};
+ 
+
         private void Form1_Load(object sender, EventArgs e)
         {
 
@@ -45,7 +83,7 @@ namespace Scheme_Finder
         // Display 'About' information
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Scheme Finder V1\nWritten by Dean Findlay\nDean.Findlay@Derbyshire.Gov.UK");
+            MessageBox.Show("Scheme Finder V1.2\nWritten by Dean Findlay\nDean.Findlay@Derbyshire.Gov.UK");
         }
 
         // Set source file path
@@ -110,16 +148,140 @@ namespace Scheme_Finder
                     , targetLength, targetScore, targetTolerance
                     , ListofListSections );
 
-                this.Text = "Scheme Finder";
+                this.Text = "Scheme analyser";
+                // !!! count while testing
                 MessageBox.Show(ListofListSections.Count.ToString());
+
+                // populate the scheme summary box
+                populateSchemeSummary();
+
+                
             }
+        }
+
+        // initialise given listview with headers in string array
+        private void initialiseListView(ListView lview, string[] fields)
+        {
+            // clear columns or it adds to any already present
+            lview.Columns.Clear();
+
+            foreach (string i in fields)
+            {
+                // !!! maybe change this to automatic width using '-2'
+                lview.Columns.Add(i);
+            }            
+        }
+
+        // populate the scheme summary listview
+        private void populateSchemeSummary()
+        {
+            lvw_SchemeSummary.Items.Clear();
+
+            // counter for Scheme No
+            int i = 1;
+
+            // iterate through each member of list
+            foreach (List<Section> scheme in ListofListSections)
+            {
+                // summarise scheme - send 'i' to be added to beginning of string[]
+                string[] tempString = ListSection.SummariseScheme(scheme, i);
+
+                // create listViewItem
+                ListViewItem tempLV = new ListViewItem(tempString);
+
+                // send listViewItem to be displayed
+                sendValues(lvw_SchemeSummary, tempLV);
+
+                i++;
+            }
+        }
+
+        private void sendValues(ListView lview, ListViewItem item)
+        {
+            lview.Items.Add(item);
         }
 
         // !!! Show selected scheme from lvw_SchemeSummary in lvw_Scheme
         private void btn_ShowScheme_Click(object sender, EventArgs e)
         {
+            // clear items or it adds to any present
+            lvw_Scheme.Items.Clear();
 
-        }   
+            // ensure one scheme is selected and find it's index
+            int lstIndex;
+            if (lvw_SchemeSummary.SelectedItems.Count == 1)
+            {
+                lstIndex = lvw_SchemeSummary.SelectedItems[0].Index;
+            }
+            else if (lvw_SchemeSummary.SelectedItems.Count == 0)
+            {
+                MessageBox.Show("No scheme selected");
+                return;
+            }
+            else
+            {
+                MessageBox.Show("Multiple schemes selected");
+                return;
+            }
+
+            // populate tempScheme with the correct data
+            List<Section> tempScheme = new List<Section>();
+            System.Collections.IEnumerator en = ListofListSections.GetEnumerator();
+            int i = 0;
+            if (en.MoveNext())
+            {
+                while (lstIndex != i)
+                {
+                    en.MoveNext();
+                    i++;
+                }
+                // find the selected scheme and cast to tempScheme holder
+                tempScheme = (List<Section>)en.Current;
+            }
+            else
+            {
+                return;
+            }
+
+            // Clear schemeSectionListViews of any existing sections
+            if (schemeSectionListView.Count > 0)
+            {
+                schemeSectionListView.Clear();
+            }
+            // Fill SchemeSectionsListView with Sections converted to ListViewItems
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en1 = tempScheme.GetEnumerator();
+            while (en1.MoveNext())
+            {
+                tempSection = (Section)en1.Current;
+                schemeSectionListView.Add(ListSection.ConvertSectionToListViewItem(tempSection));
+            }
+
+            // test stuff to colour items in the list box --- Working WOO!
+            ListViewItem tempLvItem = new ListViewItem();
+            System.Collections.IEnumerator en2 = schemeSectionListView.GetEnumerator();
+            while (en2.MoveNext())
+            {
+                tempLvItem = (ListViewItem)en2.Current;
+                if (float.Parse(tempLvItem.SubItems[6].Text) >= 90)
+                {
+                    tempLvItem.UseItemStyleForSubItems = false;
+                    tempLvItem.SubItems[6].ForeColor = Color.Red;
+                }
+                else
+                {
+                    tempLvItem.UseItemStyleForSubItems = false;
+                    tempLvItem.SubItems[6].ForeColor = Color.Blue;
+                }
+            }
+
+            foreach (ListViewItem lv in schemeSectionListView)
+            {
+                sendValues(lvw_Scheme, lv);
+            }
+        }
+
+  
      
         // !!! Once extraction is complete set all path and target variables to null
         // so that if new variables are attempted that are not valid the program does
@@ -154,7 +316,7 @@ namespace Scheme_Finder
         }
     }
 
-    // !!! Controls the flow of the program
+    // Controls the flow of the program
     public class FindSchemes
     {
         // variables from form
@@ -164,7 +326,6 @@ namespace Scheme_Finder
         // !!! variables to hold relevant information on the current scheme being processed
         // LaneA denotes the first lane that triggered the call while LaneB denotes the opposite side.
         private float laneAStartChain, laneAEndChain;
-        private float laneBStartChain, laneBEndChain;
 
         // !!! Starting point for program
         public void StartFinder(string formSource, string formDestination
@@ -548,7 +709,7 @@ namespace Scheme_Finder
         }
     }
 
-    // !!! Struct to hold Section + related tools
+    // Struct to hold Section + related tools
     public struct Section
     {
         public int id;
@@ -576,6 +737,14 @@ namespace Scheme_Finder
             writer.Write(this.id + "," + this.road_No + "," + this.section_No + "," + this.lane + ","
                     + this.start_Chain + "," + this.end_Chain + "," + this.length + ", " + this.score);
             writer.WriteLine();
+        }
+
+        // returns score of a section when given the length of the scheme
+        public float ReturnScore(float schemeLen)
+        {
+            float score = this.score / schemeLen * this.length;
+
+            return score;
         }
     }
     
@@ -651,12 +820,98 @@ namespace Scheme_Finder
     // !!! tools for working with list<Section>'s
     public static class ListSection
     {
-        // !!! find score of scheme
+        // summarise a list<Section> and return the road_No, Start and end Section_No,
+        // start and end chain and score
+        public static string[] SummariseScheme(List<Section> scheme, int i)
+        {
+            string road_no, start_section, end_section = "Unnasigned";
+            float start_chain, end_chain = 999999, score;
+            float laneA_Length, laneB_Length = 0;
+            float laneA_Score, laneB_Score = 0;
+            string mainLane;
+
+            // read first section get road_no, start_section, start_chain
+            List<Section>.Enumerator e1 = scheme.GetEnumerator();
+            e1.MoveNext();
+            Section firstSection = e1.Current;
+            mainLane = firstSection.lane;
+            road_no = firstSection.road_No;
+            start_section = firstSection.section_No;
+            start_chain = firstSection.start_Chain;
+            // length taken to start off loop in next section
+            laneA_Length = firstSection.length;
+
+            // get lane A&B lengths
+            while (e1.MoveNext())
+            {
+                Section tempSection = e1.Current;
+
+                if (tempSection.lane == mainLane)
+                {
+                    laneA_Length += tempSection.length;
+                }
+                else
+                {
+                    laneB_Length += tempSection.length;
+                }
+            }
+
+
+            // read every other section (while Lane same overwriting end_section, end_Chain)
+            // get score
+            List<Section>.Enumerator e2 = scheme.GetEnumerator();
+            e2.MoveNext();
+            firstSection = e2.Current;
+            laneA_Score = firstSection.ReturnScore(laneA_Length);
+            while (e2.MoveNext())
+            {
+                Section tempSection = e2.Current;
+
+                // overwrite end_section & end_Chain
+                if (tempSection.lane == mainLane)
+                {
+                    end_section = tempSection.section_No;
+                    end_chain = tempSection.end_Chain;
+
+                    laneA_Score += tempSection.ReturnScore(laneA_Length);
+                }
+                else
+                {
+                    laneB_Score += tempSection.ReturnScore(laneB_Length);
+                }
+            }
+
+
+            // divide each lane by 2 and add together
+            score = (laneA_Score / 2) + (laneB_Score / 2);
+
+            string[] temp = new string[] {i.ToString(), road_no, start_section, start_chain.ToString()
+                , end_section, end_chain.ToString(), score.ToString()};
+            return temp;
+        }
+
+        // Convert a Section to a listViewItem
+        public static ListViewItem ConvertSectionToListViewItem(Section section)
+        {
+            string id = section.id.ToString();
+            string roadNo = section.road_No;
+            string sectionNo = section.section_No.ToString();
+            string lane = section.lane;
+            string startCh = section.start_Chain.ToString();
+            string endCh = section.end_Chain.ToString();
+            string score = section.score.ToString();
+
+            ListViewItem holder = new ListViewItem(new[] {id, roadNo,
+                sectionNo, lane, startCh, endCh, score});
+
+            return holder;
+        }
     }
 
     // !!! tools for working with list<list<Section>>'s
     public static class ListListSection // may have to add interface here such as iSortable or iEnumerable
     {
+
         // !!! sort by score
 
 

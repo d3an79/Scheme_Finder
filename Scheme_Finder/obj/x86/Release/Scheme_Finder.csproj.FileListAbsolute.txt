@@ -6,3 +6,11 @@ C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\
 C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.pdb
 C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.MainForm.resources
 C:\Users\Dean\documents\visual studio 2010\Projects\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.csprojResolveAssemblyReference.cache
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\bin\Release\Scheme_Finder.exe
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\bin\Release\Scheme_Finder.pdb
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.csprojResolveAssemblyReference.cache
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.MainForm.resources
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.Properties.Resources.resources
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.csproj.GenerateResource.Cache
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.exe
+C:\Users\Dean\Documents\GitHub\Scheme_Finder\Scheme_Finder\obj\x86\Release\Scheme_Finder.pdb

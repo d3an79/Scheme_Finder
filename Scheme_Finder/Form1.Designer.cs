@@ -129,11 +129,15 @@
             // 
             // lvw_SchemeSummary
             // 
+            this.lvw_SchemeSummary.FullRowSelect = true;
+            this.lvw_SchemeSummary.HideSelection = false;
             this.lvw_SchemeSummary.Location = new System.Drawing.Point(15, 239);
+            this.lvw_SchemeSummary.MultiSelect = false;
             this.lvw_SchemeSummary.Name = "lvw_SchemeSummary";
             this.lvw_SchemeSummary.Size = new System.Drawing.Size(556, 97);
             this.lvw_SchemeSummary.TabIndex = 7;
             this.lvw_SchemeSummary.UseCompatibleStateImageBehavior = false;
+            this.lvw_SchemeSummary.View = System.Windows.Forms.View.Details;
             // 
             // lvw_Scheme
             // 
@@ -142,6 +146,7 @@
             this.lvw_Scheme.Size = new System.Drawing.Size(556, 256);
             this.lvw_Scheme.TabIndex = 10;
             this.lvw_Scheme.UseCompatibleStateImageBehavior = false;
+            this.lvw_Scheme.View = System.Windows.Forms.View.Details;
             // 
             // menuStrip1
             // 
