@@ -1,6 +1,6 @@
 ﻿/********************************************************************************************************
  * 
- * Scheme_finder V1 written by Dean Findlay 19/01/14
+ * Scheme_finder V1 re-written by Dean Findlay 19/01/14
  * 
  * v1 basic functionality - fixed scheme length drift
  * 
@@ -8,13 +8,17 @@
  * 
  * 11/02/14 v1.2 - listviews working 
  * 
+ * 11/02/14 v1.2.1 - Cleaned up methods from MainForm for readability and flow
+ * 
  * 
  * TODO
+ * 
+ * Clean program up - abstraction + encapsulation
  * 
  * Colour scores in scheme view according to UKPMS value ranges
  * 
  * Create a continuous scheme workflow where if a scheme continues to be viable the extents are
- *    extended to accomodate
+ *    extended to accomodate  --- Use branch/fork in GITHub ---
  *    
  * Functionality to choose wich outputs are included
  * 
@@ -27,6 +31,8 @@
  * Choose Min/Max score range to highlight different typres of conditions
  * 
  * Ability to read in Un-processed SCANNER data and apply different weightings
+ * 
+ * Add timer to update status bar while
  * 
  * Add mapping portal using MapWinGIS
  * 
@@ -83,7 +89,7 @@ namespace Scheme_Finder
         // Display 'About' information
         private void aboutToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            MessageBox.Show("Scheme Finder V1.2\nWritten by Dean Findlay\nDean.Findlay@Derbyshire.Gov.UK");
+            MessageBox.Show("Scheme Finder V1.2.1\nWritten by Dean Findlay\nDean.Findlay@Derbyshire.Gov.UK");
         }
 
         // Set source file path
@@ -124,39 +130,82 @@ namespace Scheme_Finder
         // !!! Start program running
         private void btn_Start_Click(object sender, EventArgs e)
         {
-            // Checks to ensure a valid source/destinaton path have been given
-            if (sourceFilePath == null)
+
+            // Check both file paths have ben supplied
+            if (checkFilePaths() == false)
             {
-                MessageBox.Show("No source path specified");
-                return;
-            }
-            if (destinationFilePath == null)
-            {
-                MessageBox.Show("No destination path specified");
                 return;
             }
 
-            // Checks that valid numeric variables have been entered
+            // Checks for valid numerical input and starts program running if true
+            if (checkValidNumbers())
+            {
+                startFindSchemes();
+            }
+            else
+            {
+                return;
+            }
+        }
+
+        // Starts the FindSchemes part of the program running
+        private void startFindSchemes()
+        {
+            // clears the listofschemes so new schemes not added to a previous list
+            // if program run twice
+            ListofListSections.Clear();
+
+            this.Text = "Scheme finder - Extracting";
+            // Initate instance of FinndSchemes and start program
+            FindSchemes run = new FindSchemes();
+            run.StartFinder(sourceFilePath, destinationFilePath
+                , targetLength, targetScore, targetTolerance
+                , ListofListSections);
+
+            // calls to start scheme analysis once FindSchemes returns
+            startAnalysis();
+        }
+
+        public void startAnalysis()
+        {
+            this.Text = "Scheme analyser";
+            // !!! display count while testing
+            MessageBox.Show(ListofListSections.Count.ToString());
+
+            // populate the scheme summary box
+            populateSchemeSummary();
+        }
+
+        // Check that valid numbers have been supplied, if not user is prompted accordingly
+        private bool checkValidNumbers()
+        {
             if ((Helpers.validNumber(txt_Length.Text, ref targetLength, "length")) &&
                 (Helpers.validNumber(txt_Score.Text, ref targetScore, "score")) &&
                 (Helpers.validNumber(txt_Tolerance.Text, ref targetTolerance, "tolerance")))
             {
-                this.Text = "Scheme finder - Extracting";
-                // Initate instance of FinndSchemes and start program
-                FindSchemes run = new FindSchemes();
-                run.StartFinder(sourceFilePath, destinationFilePath
-                    , targetLength, targetScore, targetTolerance
-                    , ListofListSections );
-
-                this.Text = "Scheme analyser";
-                // !!! count while testing
-                MessageBox.Show(ListofListSections.Count.ToString());
-
-                // populate the scheme summary box
-                populateSchemeSummary();
-
-                
+                return true;
             }
+            else
+            {
+                return false;
+            }            
+        }
+
+        // Checks to see if file paths have been specified, if not then user is prompted accordingly
+        private bool checkFilePaths()
+        {
+            if (sourceFilePath == null)
+            {
+                MessageBox.Show("No source path specified");
+                return false ;
+            }
+            if (destinationFilePath == null)
+            {
+                MessageBox.Show("No destination path specified");
+                return false;
+            }
+
+            return true;
         }
 
         // initialise given listview with headers in string array
@@ -201,31 +250,72 @@ namespace Scheme_Finder
             lview.Items.Add(item);
         }
 
-        // !!! Show selected scheme from lvw_SchemeSummary in lvw_Scheme
+        // Show selected scheme from lvw_SchemeSummary in lvw_Scheme
         private void btn_ShowScheme_Click(object sender, EventArgs e)
         {
             // clear items or it adds to any present
             lvw_Scheme.Items.Clear();
 
-            // ensure one scheme is selected and find it's index
-            int lstIndex;
+            // finds the index of the selected schemeSummary listview
+            // if no valid scheme is selected a value of -1 will be returned
+            int lstIndex = checkIndex();
+            // leaves call if no valid index selected
+            if (lstIndex == -1)
+            {
+                return;
+            }
+
+            // temporary list<section> to hold scheme
+            List<Section> tempScheme = new List<Section>();
+
+            // populates tempScheme with the selected scheme
+            // if no scheme is assigned the leave call
+            if (!summaryToScheme(ref tempScheme, lstIndex))
+            {
+                return;
+            }
+            
+            // populate schemeSectonListView
+            populateSchemeSectionListView(tempScheme);
+          
+
+            // colour items in the list box
+            // !!! change this to use the colour style of the UKPMS range
+
+            // Colours the core values in the schemes listview box
+            colourSchemeScores();
+
+            // send each listviewitem to be displayed
+            foreach (ListViewItem lv in schemeSectionListView)
+            {
+                sendValues(lvw_Scheme, lv);
+            }
+        }
+        
+        // Checks for selected index in the schemeSummary listview
+        private int checkIndex()
+        {
+            // ensure one scheme is selected and find it's index            
             if (lvw_SchemeSummary.SelectedItems.Count == 1)
             {
-                lstIndex = lvw_SchemeSummary.SelectedItems[0].Index;
+                return lvw_SchemeSummary.SelectedItems[0].Index;
             }
             else if (lvw_SchemeSummary.SelectedItems.Count == 0)
             {
                 MessageBox.Show("No scheme selected");
-                return;
+                return -1;
             }
             else
             {
                 MessageBox.Show("Multiple schemes selected");
-                return;
+                return -1;
             }
+        }
 
+        // populates the tempScheme with the correct scheme
+        private bool summaryToScheme(ref List<Section> tempScheme ,int lstIndex)
+        {
             // populate tempScheme with the correct data
-            List<Section> tempScheme = new List<Section>();
             System.Collections.IEnumerator en = ListofListSections.GetEnumerator();
             int i = 0;
             if (en.MoveNext())
@@ -237,12 +327,18 @@ namespace Scheme_Finder
                 }
                 // find the selected scheme and cast to tempScheme holder
                 tempScheme = (List<Section>)en.Current;
+
+                return true;
             }
             else
             {
-                return;
+                return false;
             }
+        }
 
+        // populates SchemeSectionListView with listViewItems converted from tempScheme
+        private void populateSchemeSectionListView(List<Section> tempScheme)
+        {
             // Clear schemeSectionListViews of any existing sections
             if (schemeSectionListView.Count > 0)
             {
@@ -256,8 +352,12 @@ namespace Scheme_Finder
                 tempSection = (Section)en1.Current;
                 schemeSectionListView.Add(ListSection.ConvertSectionToListViewItem(tempSection));
             }
+        }
 
-            // test stuff to colour items in the list box --- Working WOO!
+        // Colours the score value
+        // !!! change this to use the colour style of the UKPMS range
+        private void colourSchemeScores()
+        {
             ListViewItem tempLvItem = new ListViewItem();
             System.Collections.IEnumerator en2 = schemeSectionListView.GetEnumerator();
             while (en2.MoveNext())
@@ -274,18 +374,8 @@ namespace Scheme_Finder
                     tempLvItem.SubItems[6].ForeColor = Color.Blue;
                 }
             }
-
-            foreach (ListViewItem lv in schemeSectionListView)
-            {
-                sendValues(lvw_Scheme, lv);
-            }
         }
 
-  
-     
-        // !!! Once extraction is complete set all path and target variables to null
-        // so that if new variables are attempted that are not valid the program does
-        // not just use the old variables
     }
 
     // Collection of static helpers used throughout the program
@@ -483,8 +573,13 @@ namespace Scheme_Finder
                 
             }
 
-            MessageBox.Show("Extraction complete");
+            // close reader and writers so program can be run again if necessary
+            reader.Close();
+            Viable_SchemeWriter.Close();
+            Opposite_SideWriter.Close();
+            Both_SidesWriter.Close();
 
+            MessageBox.Show("Extraction complete");
         }
 
         // returns section from given text
