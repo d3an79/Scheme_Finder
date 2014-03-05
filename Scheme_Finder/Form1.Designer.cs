@@ -28,6 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.btn_Source = new System.Windows.Forms.Button();
             this.btn_Destination = new System.Windows.Forms.Button();
             this.txt_DisplaySource = new System.Windows.Forms.TextBox();
@@ -42,10 +44,20 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.cmbo_ChartType = new System.Windows.Forms.ToolStripComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
+            this.chart1 = new System.Windows.Forms.DataVisualization.Charting.Chart();
+            this.lbl_Info1 = new System.Windows.Forms.Label();
+            this.lbl_Info2 = new System.Windows.Forms.Label();
+            this.lbl_Info3 = new System.Windows.Forms.Label();
+            this.lbl_Info4 = new System.Windows.Forms.Label();
+            this.lbl_Info5 = new System.Windows.Forms.Label();
+            this.txt_LowLimit = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart1)).BeginInit();
             this.SuspendLayout();
             // 
             // btn_Source
@@ -60,7 +72,7 @@
             // 
             // btn_Destination
             // 
-            this.btn_Destination.Location = new System.Drawing.Point(11, 78);
+            this.btn_Destination.Location = new System.Drawing.Point(12, 53);
             this.btn_Destination.Name = "btn_Destination";
             this.btn_Destination.Size = new System.Drawing.Size(75, 23);
             this.btn_Destination.TabIndex = 1;
@@ -80,7 +92,7 @@
             // txt_DisplayDestination
             // 
             this.txt_DisplayDestination.Enabled = false;
-            this.txt_DisplayDestination.Location = new System.Drawing.Point(118, 78);
+            this.txt_DisplayDestination.Location = new System.Drawing.Point(116, 53);
             this.txt_DisplayDestination.Name = "txt_DisplayDestination";
             this.txt_DisplayDestination.Size = new System.Drawing.Size(304, 20);
             this.txt_DisplayDestination.TabIndex = 3;
@@ -88,28 +100,28 @@
             // 
             // txt_Tolerance
             // 
-            this.txt_Tolerance.Location = new System.Drawing.Point(173, 133);
+            this.txt_Tolerance.Location = new System.Drawing.Point(227, 100);
             this.txt_Tolerance.Name = "txt_Tolerance";
             this.txt_Tolerance.Size = new System.Drawing.Size(100, 20);
-            this.txt_Tolerance.TabIndex = 3;
+            this.txt_Tolerance.TabIndex = 4;
             // 
             // txt_Length
             // 
-            this.txt_Length.Location = new System.Drawing.Point(11, 133);
+            this.txt_Length.Location = new System.Drawing.Point(12, 100);
             this.txt_Length.Name = "txt_Length";
             this.txt_Length.Size = new System.Drawing.Size(100, 20);
             this.txt_Length.TabIndex = 2;
             // 
             // txt_Score
             // 
-            this.txt_Score.Location = new System.Drawing.Point(15, 190);
+            this.txt_Score.Location = new System.Drawing.Point(121, 100);
             this.txt_Score.Name = "txt_Score";
             this.txt_Score.Size = new System.Drawing.Size(100, 20);
-            this.txt_Score.TabIndex = 4;
+            this.txt_Score.TabIndex = 3;
             // 
             // btn_Start
             // 
-            this.btn_Start.Location = new System.Drawing.Point(173, 190);
+            this.btn_Start.Location = new System.Drawing.Point(15, 129);
             this.btn_Start.Name = "btn_Start";
             this.btn_Start.Size = new System.Drawing.Size(100, 23);
             this.btn_Start.TabIndex = 5;
@@ -119,9 +131,9 @@
             // 
             // btn_ShowScheme
             // 
-            this.btn_ShowScheme.Location = new System.Drawing.Point(312, 190);
+            this.btn_ShowScheme.Location = new System.Drawing.Point(122, 210);
             this.btn_ShowScheme.Name = "btn_ShowScheme";
-            this.btn_ShowScheme.Size = new System.Drawing.Size(110, 23);
+            this.btn_ShowScheme.Size = new System.Drawing.Size(99, 23);
             this.btn_ShowScheme.TabIndex = 6;
             this.btn_ShowScheme.Text = "Show Scheme";
             this.btn_ShowScheme.UseVisualStyleBackColor = true;
@@ -129,21 +141,27 @@
             // 
             // lvw_SchemeSummary
             // 
+            this.lvw_SchemeSummary.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.lvw_SchemeSummary.FullRowSelect = true;
             this.lvw_SchemeSummary.HideSelection = false;
-            this.lvw_SchemeSummary.Location = new System.Drawing.Point(15, 239);
+            this.lvw_SchemeSummary.Location = new System.Drawing.Point(15, 258);
             this.lvw_SchemeSummary.MultiSelect = false;
             this.lvw_SchemeSummary.Name = "lvw_SchemeSummary";
-            this.lvw_SchemeSummary.Size = new System.Drawing.Size(556, 97);
-            this.lvw_SchemeSummary.TabIndex = 7;
+            this.lvw_SchemeSummary.Size = new System.Drawing.Size(886, 304);
+            this.lvw_SchemeSummary.TabIndex = 9;
             this.lvw_SchemeSummary.UseCompatibleStateImageBehavior = false;
             this.lvw_SchemeSummary.View = System.Windows.Forms.View.Details;
+            this.lvw_SchemeSummary.SelectedIndexChanged += new System.EventHandler(this.lvw_SchemeSummary_SelectedIndexChanged);
             // 
             // lvw_Scheme
             // 
-            this.lvw_Scheme.Location = new System.Drawing.Point(15, 368);
+            this.lvw_Scheme.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.lvw_Scheme.Location = new System.Drawing.Point(15, 568);
             this.lvw_Scheme.Name = "lvw_Scheme";
-            this.lvw_Scheme.Size = new System.Drawing.Size(556, 256);
+            this.lvw_Scheme.Size = new System.Drawing.Size(886, 174);
             this.lvw_Scheme.TabIndex = 10;
             this.lvw_Scheme.UseCompatibleStateImageBehavior = false;
             this.lvw_Scheme.View = System.Windows.Forms.View.Details;
@@ -151,10 +169,11 @@
             // menuStrip1
             // 
             this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.helpToolStripMenuItem});
+            this.helpToolStripMenuItem,
+            this.cmbo_ChartType});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(598, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(928, 27);
             this.menuStrip1.TabIndex = 11;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -163,7 +182,7 @@
             this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.aboutToolStripMenuItem});
             this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
-            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 23);
             this.helpToolStripMenuItem.Text = "Help";
             // 
             // aboutToolStripMenuItem
@@ -173,10 +192,15 @@
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // cmbo_ChartType
+            // 
+            this.cmbo_ChartType.Name = "cmbo_ChartType";
+            this.cmbo_ChartType.Size = new System.Drawing.Size(121, 23);
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(8, 117);
+            this.label1.Location = new System.Drawing.Point(9, 84);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(81, 13);
             this.label1.TabIndex = 12;
@@ -185,26 +209,113 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(170, 117);
+            this.label2.Location = new System.Drawing.Point(224, 84);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(118, 13);
+            this.label2.Size = new System.Drawing.Size(85, 13);
             this.label2.TabIndex = 13;
-            this.label2.Text = "Opposite side tolerance";
+            this.label2.Text = "Opposite side tol";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 174);
+            this.label3.Location = new System.Drawing.Point(118, 84);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(69, 13);
             this.label3.TabIndex = 14;
             this.label3.Text = "Target Score";
             // 
+            // chart1
+            // 
+            chartArea2.AxisX.MinorGrid.Enabled = true;
+            chartArea2.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea2);
+            legend2.Name = "Legend1";
+            this.chart1.Legends.Add(legend2);
+            this.chart1.Location = new System.Drawing.Point(444, 12);
+            this.chart1.Name = "chart1";
+            this.chart1.Size = new System.Drawing.Size(457, 221);
+            this.chart1.TabIndex = 15;
+            this.chart1.Text = "chart1";
+            // 
+            // lbl_Info1
+            // 
+            this.lbl_Info1.AutoSize = true;
+            this.lbl_Info1.Location = new System.Drawing.Point(245, 129);
+            this.lbl_Info1.Name = "lbl_Info1";
+            this.lbl_Info1.Size = new System.Drawing.Size(35, 13);
+            this.lbl_Info1.TabIndex = 16;
+            this.lbl_Info1.Text = "label4";
+            this.lbl_Info1.Visible = false;
+            // 
+            // lbl_Info2
+            // 
+            this.lbl_Info2.AutoSize = true;
+            this.lbl_Info2.Location = new System.Drawing.Point(245, 154);
+            this.lbl_Info2.Name = "lbl_Info2";
+            this.lbl_Info2.Size = new System.Drawing.Size(35, 13);
+            this.lbl_Info2.TabIndex = 17;
+            this.lbl_Info2.Text = "label5";
+            this.lbl_Info2.Visible = false;
+            // 
+            // lbl_Info3
+            // 
+            this.lbl_Info3.AutoSize = true;
+            this.lbl_Info3.Location = new System.Drawing.Point(245, 180);
+            this.lbl_Info3.Name = "lbl_Info3";
+            this.lbl_Info3.Size = new System.Drawing.Size(35, 13);
+            this.lbl_Info3.TabIndex = 18;
+            this.lbl_Info3.Text = "label6";
+            this.lbl_Info3.Visible = false;
+            // 
+            // lbl_Info4
+            // 
+            this.lbl_Info4.AutoSize = true;
+            this.lbl_Info4.Location = new System.Drawing.Point(245, 205);
+            this.lbl_Info4.Name = "lbl_Info4";
+            this.lbl_Info4.Size = new System.Drawing.Size(35, 13);
+            this.lbl_Info4.TabIndex = 19;
+            this.lbl_Info4.Text = "label7";
+            this.lbl_Info4.Visible = false;
+            // 
+            // lbl_Info5
+            // 
+            this.lbl_Info5.AutoSize = true;
+            this.lbl_Info5.Location = new System.Drawing.Point(245, 230);
+            this.lbl_Info5.Name = "lbl_Info5";
+            this.lbl_Info5.Size = new System.Drawing.Size(35, 13);
+            this.lbl_Info5.TabIndex = 20;
+            this.lbl_Info5.Text = "label8";
+            this.lbl_Info5.Visible = false;
+            // 
+            // txt_LowLimit
+            // 
+            this.txt_LowLimit.Location = new System.Drawing.Point(15, 215);
+            this.txt_LowLimit.Name = "txt_LowLimit";
+            this.txt_LowLimit.Size = new System.Drawing.Size(100, 20);
+            this.txt_LowLimit.TabIndex = 7;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(12, 199);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(76, 13);
+            this.label5.TabIndex = 23;
+            this.label5.Text = "Low score limit";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(598, 698);
+            this.ClientSize = new System.Drawing.Size(928, 754);
+            this.Controls.Add(this.txt_LowLimit);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.lbl_Info5);
+            this.Controls.Add(this.lbl_Info4);
+            this.Controls.Add(this.lbl_Info3);
+            this.Controls.Add(this.lbl_Info2);
+            this.Controls.Add(this.lbl_Info1);
+            this.Controls.Add(this.chart1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -226,6 +337,7 @@
             this.Load += new System.EventHandler(this.Form1_Load);
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.chart1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -250,6 +362,15 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.DataVisualization.Charting.Chart chart1;
+        private System.Windows.Forms.Label lbl_Info1;
+        private System.Windows.Forms.Label lbl_Info2;
+        private System.Windows.Forms.Label lbl_Info3;
+        private System.Windows.Forms.Label lbl_Info4;
+        private System.Windows.Forms.Label lbl_Info5;
+        private System.Windows.Forms.TextBox txt_LowLimit;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.ToolStripComboBox cmbo_ChartType;
     }
 }
 

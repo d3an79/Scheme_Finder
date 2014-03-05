@@ -10,6 +10,8 @@
  * 
  * 11/02/14 v1.2.1 - Cleaned up methods from MainForm for readability and flow
  * 
+ * 05/03/14 V1.3 - added chart and statistical information
+ * 
  * 
  * TODO
  * 
@@ -20,21 +22,23 @@
  * Create a continuous scheme workflow where if a scheme continues to be viable the extents are
  *    extended to accomodate  --- Use branch/fork in GITHub ---
  *    
- * Functionality to choose wich outputs are included
+ * Functionality to choose which outputs are included
  * 
  * Ability to load in pre-analysed schemes
  * 
- * Scheme efficiency tools - STDEV...
- * 
- * Sort scheme summary on score, Road_NO/Section_No, STDEV
+ * Sort scheme summary on score, Road_NO/Section_No, STDEV, %UnderLimit
  * 
  * Choose Min/Max score range to highlight different typres of conditions
  * 
  * Ability to read in Un-processed SCANNER data and apply different weightings
  * 
- * Add timer to update status bar while
+ * Add timer to update status bar while findSchemes running so it doesn't look like it has crashed
  * 
  * Add mapping portal using MapWinGIS
+ * 
+ * Improve chart display - set y range 0-300
+ *                       - inrease width on line chart series displays
+ *                       - set x axis minor ticks to minimum of 1
  * 
  * ****************************************************************************************************/
 using System;
@@ -46,6 +50,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.IO;
+using ChartClass;
 
 namespace Scheme_Finder
 {
@@ -62,7 +67,8 @@ namespace Scheme_Finder
 
         // Internal variables
         private string  sourceFilePath, destinationFilePath;
-        private float targetLength, targetScore, targetTolerance;
+        private float targetLength, targetScore, targetTolerance;       
+        
 
         // initialise list of sections
         List<Section> ListSections = new List<Section>();
@@ -83,7 +89,10 @@ namespace Scheme_Finder
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+            // initialise combo box for chart type
+            cmbo_ChartType.Items.Add("Column");
+            cmbo_ChartType.Items.Add("Line");
+            cmbo_ChartType.SelectedIndex = 0;
         }
 
         // Display 'About' information
@@ -290,6 +299,99 @@ namespace Scheme_Finder
             {
                 sendValues(lvw_Scheme, lv);
             }
+
+            // displays chart according to combo box selection on form
+            chooseChartType(tempScheme);
+        
+            // calls for info labels to be displayed
+            organiseInfoLabels(tempScheme);
+        }
+
+        // changes chart and label info as scheme info changes
+        private void lvw_SchemeSummary_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (lvw_SchemeSummary.SelectedItems.Count == 0)
+            {
+                return;
+            }
+
+            // finds the index of the selected schemeSummary listview
+            int lstIndex = checkIndex();
+
+
+
+            // temporary list<section> to hold scheme
+            List<Section> tempScheme = new List<Section>();
+
+            // populates tempScheme with the selected scheme
+            // if no scheme is assigned the leave call
+            if (!summaryToScheme(ref tempScheme, lstIndex))
+            {
+                return;
+            }
+
+            // displays chart according to combo box selection on form
+            chooseChartType(tempScheme);
+
+            // calls for info labels to be displayed
+            organiseInfoLabels(tempScheme);
+        }
+
+
+
+        // calls for the correct chart
+        private void chooseChartType(List<Section> tempScheme)
+        {
+            // !!! hardcode in two types for now but use switch statement later
+            if (cmbo_ChartType.SelectedIndex == 0)
+            {
+                populateColumnChart(tempScheme);
+            }
+            else
+            {
+                // checks to ensure scheme has two lanes and exits call if false
+                if (!ListSection.CheckFor2Lanes(tempScheme))
+                {
+                    MessageBox.Show("Line graph is only suitable for schemes with 2 lanes");
+                    return;
+                }
+                else
+                {
+                    populateLineChart(tempScheme);
+                }                
+            }
+        }
+
+        // gets values required to populate chart then draws chart
+        private void populateColumnChart(List<Section> tempScheme)
+        {
+            // creates a float[] from selected scheme section scores
+            float[] schemeScores = ListSection.GetSectionScores(tempScheme);
+
+            // initialise chart
+            MyChart schemeChart = new MyChart(chart1);
+
+            // draws chart with given values
+            schemeChart.DrawChart(schemeScores, "Section scores", "Chart of sections"
+                , "Sections", "Scores");
+        }
+
+        // gets values required to populate chart then draws chart
+        private void populateLineChart(List<Section> tempScheme)
+        {
+            // creates a float[] from left lane of selected scheme section scores
+            float[] leftLane = ListSection.GetLaneScores(tempScheme, "Left");
+
+            // creates a float[] from left lane of selected scheme section scores
+            float[] rightLane = ListSection.GetLaneScores(tempScheme, "Right");
+
+            // initialise chart
+            MyChart schemeChart = new MyChart(chart1);
+
+            // draws chart with given values
+            schemeChart.DrawChart(leftLane, "Left", rightLane, "Right"  
+                , "Chart of sections"
+                , "Sections", "Scores");
         }
         
         // Checks for selected index in the schemeSummary listview
@@ -376,6 +478,66 @@ namespace Scheme_Finder
             }
         }
 
+        // organises how the info labels work
+        private void organiseInfoLabels(List<Section> scheme)
+        {
+            float lowLimit = 0.0f;
+
+            // if the text in low limit box is not a valid number then exit call
+            if (!Helpers.validNumber(txt_LowLimit.Text, ref lowLimit, "lowlimit"))
+            {
+                return;
+            }            
+
+            // hides all info labels !!! later when diff info can be asked for the old
+            // info needs to be hidden
+            hideInfoLabels();
+
+            // !!! populate info manually for now, automate later
+
+            // display total length of scheme
+            float schemeLength = ListSection.GetSchemeLength(scheme);
+            lbl_Info1.Text = "Total scheme length = " + schemeLength.ToString();
+            lbl_Info1.Visible = true;
+
+            // display length under score limit
+            float lengthUnder = ListSection.GetLengthUnderLimit(scheme, lowLimit);
+            lbl_Info2.Text = "Total length under limit = " + lengthUnder.ToString();
+            lbl_Info2.Visible = true;
+
+            // display % under score limit
+            float percentUnder = ListSection.GetPercentUnderLimit(scheme, lowLimit);
+            lbl_Info3.Text = "Percent of scheme under limit = " + percentUnder.ToString();
+            lbl_Info3.Visible = true;
+
+            // display standard deviation
+            float stdev = ListSection.GetStandardDeviation(scheme);
+            lbl_Info4.Text = "Standard deviation = " + stdev.ToString();
+            lbl_Info4.Visible = true;
+
+            // display coefficient of variance
+            float coeffOfVar = ListSection.GetCoefficientOfVariation(scheme);
+            lbl_Info5.Text = "Coefficient of variation = " + coeffOfVar.ToString();
+            lbl_Info5.Visible = true;
+        }
+
+        // sets all info labels visibility to false
+        private void hideInfoLabels()
+        {
+            lbl_Info1.Visible = false;
+            lbl_Info2.Visible = false;
+            lbl_Info3.Visible = false;
+            lbl_Info4.Visible = false;
+            lbl_Info5.Visible = false;
+        }
+
+        // sets the given label visible and displays the given string
+        private void displayInfoLabel(Label labelNo, string text)
+        {
+            labelNo.Visible = true;
+            labelNo.Text = text;
+        }       
+
     }
 
     // Collection of static helpers used throughout the program
@@ -391,7 +553,7 @@ namespace Scheme_Finder
             if (isNum)
             {
                 // Checks if the given number is greater than 0
-                if (num <= 0)
+                if (num < 0)
                 {
                     MessageBox.Show("Please enter a " + variable + " > 0");
                     return false;
@@ -466,8 +628,8 @@ namespace Scheme_Finder
                 // Checks to see if road_No or Lane have changed
                 // if yes then clear queue and add section
                 // if no then add section to queue
-                if ((tempSection.road_No != previousRoad_No) ||
-                    (tempSection.lane != previousLane))
+                if (checkForDequeue(tempSection.road_No, previousRoad_No,
+                    tempSection.lane, previousLane))
                 {
                     queueSection.Clear();
                     queueSection.Enqueue(tempSection);
@@ -505,11 +667,12 @@ namespace Scheme_Finder
                         Viable_SchemeWriter.WriteLine();
 
                         
-                        // creates queue and populates it with the opposite lane scheme
+                        // Queue to hold the opposite side scheme
                         Queue<Section> OppositeSideScheme = new Queue<Section>();
-                        // !!! call to write opposite_Side
-                        // check if section_No changes and call as appropriate
+                        // temp section to look at last value in queue for comparrison with first
                         Section startSection = queueSection.Peek();
+                        // checks to see if start section is same as the end section
+                        // true/false = which algorithm opposite side scheme is populated by
                         if (tempSection.section_No == startSection.section_No)
                         {
                             BothSchemes(tempSection.road_No, tempSection.section_No, tempSection.lane
@@ -528,26 +691,17 @@ namespace Scheme_Finder
                         float oppScoreSum = QueueSection.sumQueueSectionScore(OppositeSideScheme
                             , oppSideLength);
 
-                        // Writes the origional queue to file
-                        Opposite_SideWriter.WriteLine("Scheme with score of " + currentAggregateQueueScore);
-                        QueueSection.PrintQueue(queueSection, Opposite_SideWriter);
-                        Opposite_SideWriter.WriteLine();
-                        // Writes the origional queue to file
-                        Opposite_SideWriter.WriteLine("Opposite side scheme with score of " + oppScoreSum);
-                        QueueSection.PrintQueue(OppositeSideScheme, Opposite_SideWriter);
-                        Opposite_SideWriter.WriteLine();                            
+                        // Writes both sides of scheme to file
+                        writeDoubleScheme(Opposite_SideWriter, currentAggregateQueueScore
+                            , queueSection, oppScoreSum, OppositeSideScheme);
+ 
                             
-                        // !!! call to write both_Sides
+                        // check for call to write both_Sides
                         if (oppScoreSum >= targetScore)
                         {
-                            // Writes the origional queue to file
-                            Both_SidesWriter.WriteLine("Scheme with score of " + currentAggregateQueueScore);
-                            QueueSection.PrintQueue(queueSection, Both_SidesWriter);
-                            Both_SidesWriter.WriteLine();
-                            // Writes the origional queue to file
-                            Both_SidesWriter.WriteLine("Opposite side scheme with score of " + oppScoreSum);
-                            QueueSection.PrintQueue(OppositeSideScheme, Both_SidesWriter);
-                            Both_SidesWriter.WriteLine();
+                            // Writes both sides of scheme to file
+                            writeDoubleScheme(Both_SidesWriter, currentAggregateQueueScore
+                                , queueSection, oppScoreSum, OppositeSideScheme);
 
                             // create list of sections from both lanes and add to list of list sections
                             listOfListSections.Add(makeList(queueSection, OppositeSideScheme));
@@ -580,6 +734,40 @@ namespace Scheme_Finder
             Both_SidesWriter.Close();
 
             MessageBox.Show("Extraction complete");
+        }
+
+        // Writes a scheme to file with a text summary
+        private void writeSingleScheme(StreamWriter writer, float queueScore
+            , Queue<Section> queueSection, string text)
+        {
+            // Writes scheme queue to file
+            writer.WriteLine(text + queueScore);
+            QueueSection.PrintQueue(queueSection, writer);
+            writer.WriteLine();
+        }
+
+        // writes both sides of a scheme to the given streamwriter
+        private void writeDoubleScheme(StreamWriter writer, float queueScore
+            , Queue<Section> queueSection, float oppScore, Queue<Section> oppQueueSection)
+        {
+            // sends both sides of the scheme to be written
+            writeSingleScheme(writer, queueScore, queueSection, "Scheme with score of ");
+            writeSingleScheme(writer, oppScore, oppQueueSection, "Opp side scheme with score of ");
+        }
+
+        // Checks to see if road_No or Lane have changed.
+        private bool checkForDequeue(string road_No, string previousRoad_No
+            , string lane, string previousLane)
+        {
+            if ((road_No != previousRoad_No) ||
+                (lane != previousLane))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         // returns section from given text
@@ -909,6 +1097,8 @@ namespace Scheme_Finder
                 tempSection.PrintSection(writer);
             }
         }
+
+        
     }
 
 
@@ -1000,6 +1190,206 @@ namespace Scheme_Finder
                 sectionNo, lane, startCh, endCh, score});
 
             return holder;
+        }
+
+        // returns a float[] from a given scheme
+        public static float[] GetSectionScores(List<Section> sections)
+        {
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            // temp float[] to hold scores
+            float[] sectionScores = new float[sections.Count];
+            // counter to place value in correct place in float[]
+            int cntr = 0;
+
+            // move through each section in the scheme placing the score in the float[]
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                sectionScores[cntr] = (float)tempSection.score;
+
+                cntr++;
+            }
+
+            return sectionScores;
+        }
+
+        // checks to see if a scheme has 2 lanes
+        public static bool CheckFor2Lanes(List<Section> sections)
+        {
+            bool twoLanes = false;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            // moves to first section and stores which lane it is
+            en.MoveNext();
+            tempSection = (Section)en.Current;
+            string startLane = tempSection.lane;
+
+            // move through each section in the scheme placing the score in the float[]
+            while ((twoLanes == false) && (en.MoveNext()))
+            {
+                tempSection = (Section)en.Current;
+
+                if (tempSection.lane != startLane)
+                {
+                    twoLanes = true;
+                }
+            }
+
+            return twoLanes;
+        }
+
+        // returns a float[] of scores for the given lane of a scheme
+        public static float[] GetLaneScores(List<Section> sections, string lane)
+        {
+            int laneCount = CountSectionsByLane(sections, lane);
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            // temp float[] to hold scores
+            float[] sectionScores = new float[laneCount];
+            // counter to place value in correct place in float[]
+            int cntr = 0;
+
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                if (tempSection.lane == lane)
+                {
+                    sectionScores[cntr] = (float)tempSection.score;
+
+                    cntr++;
+                }                
+            }
+
+            return sectionScores;
+        }
+
+        // counts the number of sections in the given lane in a scheme
+        public static int CountSectionsByLane(List<Section> sections, string lane)
+        {
+            int laneCount = 0;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                if (tempSection.lane == lane)
+                {
+                    laneCount++;
+                }                
+            }
+
+            return laneCount;
+        }
+
+        // returns the total length of a scheme
+        public static float GetSchemeLength(List<Section> sections)
+        {
+            float schemeLength = 0.0f;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                schemeLength += tempSection.length;
+            }
+
+            return schemeLength;
+        }
+
+        // returns length of scheme under the given float
+        public static float GetLengthUnderLimit(List<Section> sections, float limit)
+        {
+            float lengthUnder = 0.0f;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                if (tempSection.score < limit)
+                {
+                    lengthUnder += tempSection.length;
+                }
+            }
+
+            return lengthUnder;
+        }
+
+        // returns percentage of the scheme that is under the given float
+        public static float GetPercentUnderLimit(List<Section> sections, float limit)
+        {
+            float schemeLength = GetSchemeLength(sections);
+            float lengthUnder = GetLengthUnderLimit(sections, limit);
+
+            return lengthUnder / schemeLength * 100;
+        }
+
+        // returns scheme mean
+        public static float GetSchemeMeanScore(List<Section> sections)
+        {
+            float totalScore = 0.0f;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                totalScore += tempSection.score;
+            }
+
+            return totalScore / sections.Count;
+        }
+
+        // returns varince of a scheme
+        public static float GetVariance(List<Section> sections)
+        {
+            float variance = 0.0f;
+            float mean = GetSchemeMeanScore(sections);
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                variance += (tempSection.score - mean) * (tempSection.score - mean);                
+            }
+
+            return variance / sections.Count;
+        }
+
+        // returns standard deviation
+        public static float GetStandardDeviation(List<Section> sections)
+        {
+            return (float)Math.Sqrt(GetVariance(sections));
+        }
+
+        // returns coefficient of variation
+        public static float GetCoefficientOfVariation(List<Section> sections)
+        {
+            float stdev = GetStandardDeviation(sections);
+            float mean = GetSchemeMeanScore(sections);
+
+            return stdev / mean * 100;
         }
     }
 
