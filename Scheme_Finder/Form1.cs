@@ -12,6 +12,9 @@
  * 
  * 05/03/14 V1.3 - added chart and statistical information
  * 
+ * 21/03/14 V1.4 - added spline chart and set some constraint values to stop the chart scales from
+ *    jumping around so much
+ * 
  * 
  * TODO
  * 
@@ -39,6 +42,8 @@
  * Improve chart display - set y range 0-300
  *                       - inrease width on line chart series displays
  *                       - set x axis minor ticks to minimum of 1
+ *                       
+ * Change chooseChartType() touse a switch statement to pick chart type
  * 
  * ****************************************************************************************************/
 using System;
@@ -92,6 +97,7 @@ namespace Scheme_Finder
             // initialise combo box for chart type
             cmbo_ChartType.Items.Add("Column");
             cmbo_ChartType.Items.Add("Line");
+            cmbo_ChartType.Items.Add("Spline");
             cmbo_ChartType.SelectedIndex = 0;
         }
 
@@ -337,17 +343,15 @@ namespace Scheme_Finder
             organiseInfoLabels(tempScheme);
         }
 
-
-
         // calls for the correct chart
         private void chooseChartType(List<Section> tempScheme)
         {
-            // !!! hardcode in two types for now but use switch statement later
+            // !!! hardcode in three types for now but use switch statement later
             if (cmbo_ChartType.SelectedIndex == 0)
             {
                 populateColumnChart(tempScheme);
             }
-            else
+            else if (cmbo_ChartType.SelectedIndex == 1)
             {
                 // checks to ensure scheme has two lanes and exits call if false
                 if (!ListSection.CheckFor2Lanes(tempScheme))
@@ -358,7 +362,20 @@ namespace Scheme_Finder
                 else
                 {
                     populateLineChart(tempScheme);
-                }                
+                }
+            }
+            else
+            {
+                // checks to ensure scheme has two lanes and exits call if false
+                if (!ListSection.CheckFor2Lanes(tempScheme))
+                {
+                    MessageBox.Show("Spline graph is only suitable for schemes with 2 lanes");
+                    return;
+                }
+                else
+                {
+                    populateSplineChart(tempScheme);
+                }
             }
         }
 
@@ -373,7 +390,7 @@ namespace Scheme_Finder
 
             // draws chart with given values
             schemeChart.DrawChart(schemeScores, "Section scores", "Chart of sections"
-                , "Sections", "Scores");
+                , "Sections", "Scores", float.Parse(txt_LowLimit.Text));
         }
 
         // gets values required to populate chart then draws chart
@@ -391,7 +408,69 @@ namespace Scheme_Finder
             // draws chart with given values
             schemeChart.DrawChart(leftLane, "Left", rightLane, "Right"  
                 , "Chart of sections"
-                , "Sections", "Scores");
+                , "Sections", "Scores", float.Parse(txt_LowLimit.Text));
+        }
+
+        // gets values required to populate a spline chart then draws chart
+        // Spline chart sets the lengths of the sections on the x axis and offsets
+        // left and right schemes so they line up
+        private void populateSplineChart(List<Section> tempScheme)
+        {
+
+            // find lane name for lane 'a'
+            string laneA = ListSection.GetFirstLanesSide(tempScheme);
+            // find start chain for lane 'a'
+            string sectionNoA = ListSection.GetFirstLanesSectionNo(tempScheme);
+            // find section No for lane 'a'
+            float startChA = ListSection.GetFirstLanesStartChain(tempScheme);
+
+            // find lane name for lane 'b'
+            string laneB = ListSection.GetSecondLanesSide(tempScheme);
+            // find start chain for lane 'b'
+            string sectionNoB = ListSection.GetSecondLanesSectionNo(tempScheme);
+            // find section No for lane 'b'
+            float startChB = ListSection.GetSecondLanesStartChain(tempScheme);
+
+            // max length val to constrain the x axis to
+            float maxSchemeLength = targetLength + (targetTolerance * 2);
+
+
+            // !!! need to work out how to handle different section No's
+            // !!! temp measure in place below, though not very robust
+            if (sectionNoA != sectionNoB)
+            {
+                startChA = 0;
+                startChB = 0;
+            }
+            else
+            {
+                // sets the max val as the diff between the chains and the min val 0
+                if (startChA >= startChB)
+                {
+                    startChA = startChA - startChB;
+                    startChB = 0;
+                }
+                else
+                {
+                    startChB = startChB - startChA;
+                    startChA = 0;
+                }
+            }
+
+            // creates a float[,] from laneA of selected scheme chainage and score values
+            float[,] sectionXYLaneA = ListSection.GetLaneXY(tempScheme, laneA, startChA);
+            // creates a float[,] from laneB of selected scheme chainage and score values
+            float[,] sectionXYLaneB = ListSection.GetLaneXY(tempScheme, laneB, startChB);
+            
+
+            // initialise chart
+            MyChart schemeChart = new MyChart(chart1);
+
+            // draws chart with given values
+            schemeChart.DrawChart(sectionXYLaneA, laneA, sectionXYLaneB, laneB
+                , "Chart of sections"
+                , "Sections", "Scores"
+                , maxSchemeLength, float.Parse(txt_LowLimit.Text));
         }
         
         // Checks for selected index in the schemeSummary listview
@@ -1271,6 +1350,39 @@ namespace Scheme_Finder
             return sectionScores;
         }
 
+        // returns a float[,] of chainage and scores for a given lane of the scheme
+        public static float[,] GetLaneXY(List<Section> sections, string lane, float startCh)
+        {
+            int laneCount = CountSectionsByLane(sections, lane);
+            float distFromStart = 0;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            // temp float[,] to hold values
+            float[,] sectionXY = new float[laneCount, 2];
+            // counter to place value in correct place in float[]
+            int cntr = 0;
+
+            while (en.MoveNext())
+            {
+                tempSection = (Section)en.Current;
+
+                if (tempSection.lane == lane)
+                {
+                    sectionXY[cntr, 0] = startCh + distFromStart;
+                    sectionXY[cntr, 1] = tempSection.score;
+
+                    distFromStart += tempSection.length;
+
+                    cntr++;
+                }
+            }
+
+            return sectionXY;
+ 
+        }
+
         // counts the number of sections in the given lane in a scheme
         public static int CountSectionsByLane(List<Section> sections, string lane)
         {
@@ -1390,6 +1502,125 @@ namespace Scheme_Finder
             float mean = GetSchemeMeanScore(sections);
 
             return stdev / mean * 100;
+        }
+
+        // returns first 'sides' name in the scheme (left or right)
+        public static string GetFirstLanesSide(List<Section> sections)
+        {
+            string laneName;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            en.MoveNext();
+            tempSection = (Section)en.Current;
+
+            laneName = tempSection.lane;
+
+            return laneName;
+        }
+
+        // returns first 'sides' section No
+        public static string GetFirstLanesSectionNo(List<Section> sections)
+        {
+            string sectionNo;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            en.MoveNext();
+            tempSection = (Section)en.Current;
+
+            sectionNo = tempSection.section_No;
+
+            return sectionNo;
+        }
+
+        // returns first 'sides' start chain
+        public static float GetFirstLanesStartChain(List<Section> sections)
+        {
+            float startCh;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            en.MoveNext();
+            tempSection = (Section)en.Current;
+
+            startCh = tempSection.start_Chain;
+
+            return startCh;
+        }
+
+        // returns second 'sides' name in the scheme (left or right)
+        // running through the loop to find opposite side name rather than just coding
+        // left or right in case the naming convention changes at later date
+        public static string GetSecondLanesSide(List<Section> sections)
+        {
+            string laneA = GetFirstLanesSide(sections);
+            string laneB;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            // assign first temp section for comparrison in While loop
+            en.MoveNext();
+            tempSection = (Section)en.Current;
+
+            while (en.MoveNext() && (tempSection.lane == laneA))
+            {
+                tempSection = (Section)en.Current;
+            }
+
+            laneB = tempSection.lane;
+
+            return laneB;
+        }
+
+        // returns second 'sides' section No
+        public static string GetSecondLanesSectionNo(List<Section> sections)
+        {
+            string laneA = GetFirstLanesSide(sections);
+            string sectionNoB = "Unassigned";
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            // assign first temp section for comparrison in While loop
+            en.MoveNext();
+            tempSection = (Section)en.Current;
+
+            // overwrite sectionNoB until the lane changes then exit
+            while (en.MoveNext() && (tempSection.lane == laneA))
+            {
+                tempSection = (Section)en.Current;
+                sectionNoB = tempSection.section_No;
+            }
+
+            return sectionNoB;
+        }
+
+        // returns second 'sides' start chain
+        public static float GetSecondLanesStartChain(List<Section> sections)
+        {
+            string laneA = GetFirstLanesSide(sections);
+            float startChB = 0;
+
+            Section tempSection = new Section();
+            System.Collections.IEnumerator en = sections.GetEnumerator();
+
+            // assign first temp section for comparrison in While loop
+            en.MoveNext();
+            tempSection = (Section)en.Current;
+
+            // overwrite sectionNoB until the lane changes then exit
+            while (en.MoveNext() && (tempSection.lane == laneA))
+            {
+                tempSection = (Section)en.Current;
+                startChB = tempSection.start_Chain;
+            }
+
+            return startChB;
         }
     }
 

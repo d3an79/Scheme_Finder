@@ -28,8 +28,8 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea2 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
-            System.Windows.Forms.DataVisualization.Charting.Legend legend2 = new System.Windows.Forms.DataVisualization.Charting.Legend();
+            System.Windows.Forms.DataVisualization.Charting.ChartArea chartArea1 = new System.Windows.Forms.DataVisualization.Charting.ChartArea();
+            System.Windows.Forms.DataVisualization.Charting.Legend legend1 = new System.Windows.Forms.DataVisualization.Charting.Legend();
             this.btn_Source = new System.Windows.Forms.Button();
             this.btn_Destination = new System.Windows.Forms.Button();
             this.txt_DisplaySource = new System.Windows.Forms.TextBox();
@@ -134,7 +134,7 @@
             this.btn_ShowScheme.Location = new System.Drawing.Point(122, 210);
             this.btn_ShowScheme.Name = "btn_ShowScheme";
             this.btn_ShowScheme.Size = new System.Drawing.Size(99, 23);
-            this.btn_ShowScheme.TabIndex = 6;
+            this.btn_ShowScheme.TabIndex = 7;
             this.btn_ShowScheme.Text = "Show Scheme";
             this.btn_ShowScheme.UseVisualStyleBackColor = true;
             this.btn_ShowScheme.Click += new System.EventHandler(this.btn_ShowScheme_Click);
@@ -226,11 +226,18 @@
             // 
             // chart1
             // 
-            chartArea2.AxisX.MinorGrid.Enabled = true;
-            chartArea2.Name = "ChartArea1";
-            this.chart1.ChartAreas.Add(chartArea2);
-            legend2.Name = "Legend1";
-            this.chart1.Legends.Add(legend2);
+            chartArea1.AxisX.MinorGrid.Enabled = true;
+            chartArea1.AxisX.MinorGrid.Interval = 1D;
+            chartArea1.AxisY.IsLabelAutoFit = false;
+            chartArea1.AxisY.LabelStyle.Interval = 50D;
+            chartArea1.AxisY.MajorGrid.Interval = 50D;
+            chartArea1.AxisY.MajorTickMark.Interval = 25D;
+            chartArea1.AxisY.Maximum = 300D;
+            chartArea1.AxisY.Minimum = 0D;
+            chartArea1.Name = "ChartArea1";
+            this.chart1.ChartAreas.Add(chartArea1);
+            legend1.Name = "Legend1";
+            this.chart1.Legends.Add(legend1);
             this.chart1.Location = new System.Drawing.Point(444, 12);
             this.chart1.Name = "chart1";
             this.chart1.Size = new System.Drawing.Size(457, 221);
@@ -292,7 +299,7 @@
             this.txt_LowLimit.Location = new System.Drawing.Point(15, 215);
             this.txt_LowLimit.Name = "txt_LowLimit";
             this.txt_LowLimit.Size = new System.Drawing.Size(100, 20);
-            this.txt_LowLimit.TabIndex = 7;
+            this.txt_LowLimit.TabIndex = 6;
             // 
             // label5
             // 
